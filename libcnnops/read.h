@@ -12,7 +12,7 @@ struct Header {
     int32_t num_dims;
     int32_t *shape;
 };
-Tensor *read_tensor(char *path);
+Tensor *read_tensor(char *path, char *name);
 
 
 Header *_read_header(FILE *fp) {
@@ -52,30 +52,14 @@ void *_read_data(FILE *fp, int32_t item_size, int32_t num_items) {
 }
 
 
-void _print_header(Header *h) {
-    printf("dtype: %d\n", h->dtype);
-    printf("item_size: %d\n", h->item_size);
-    printf("num_items: %d\n", h->num_items);
-    printf("num_dims: %d\n", h->num_dims);
-    printf("shape: (");
-    for (int i = 0; i < h->num_dims; i++) {
-        printf("%d", h->shape[i]);
-        if (i < h->num_dims - 1) {
-            printf(", ");
-        }
-    }
-    printf(")");
-    printf("\n");
-}
-
-
-Tensor *read_tensor(char *path) {
+Tensor *read_tensor(char *path, char *name) {
     FILE *fp;
     fp = fopen(path, "rb");
     Header *h = _read_header(fp);
     float *data = (float *) _read_data(fp, h->item_size, h->num_items);
     fclose(fp);
     Tensor *t = (Tensor *) malloc(sizeof(Tensor));
+    t->name = name;
     t->dtype = h->dtype;
     t->item_size = h->item_size;
     t->num_items = h->num_items;
