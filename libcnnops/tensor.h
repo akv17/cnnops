@@ -6,7 +6,7 @@
 
 typedef float float32_t;
 
-typedef struct Tensor Tensor; 
+typedef struct Tensor Tensor;
 struct Tensor {
     char *name;
     int32_t dtype;
