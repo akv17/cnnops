@@ -1,20 +1,10 @@
 #include <stdlib.h>
 #include "../tensor.h"
 
+#define _idx(i, j, s) (i * s + j)
+
 
 Tensor *matmul_cpu_float32(Tensor *a, Tensor *b);
-
-
-float32_t _get(float *buffer, int i, int j, int col_stride) {
-    int idx = i * col_stride + j;
-    return buffer[idx];
-}
-
-
-void _set(float *buffer, int i, int j, int col_stride, float32_t v) {
-    int idx = i * col_stride + j;
-    buffer[i * col_stride + j] = v;
-}
 
 
 Tensor *matmul_cpu_float32(Tensor *a, Tensor *b) {
@@ -39,11 +29,11 @@ Tensor *matmul_cpu_float32(Tensor *a, Tensor *b) {
         for (int j = 0; j < b_cols; j++) {
             float32_t c_acc = 0.0;
             for (int k = 0; k < common_dim; k++) {
-                float32_t ai = _get(a_buf, i, k, a_col_str);
-                float32_t bi = _get(b_buf, k, j, b_col_str);
+                float32_t ai = a_buf[_idx(i, k, a_col_str)];
+                float32_t bi = b_buf[_idx(k, j, b_col_str)];
                 c_acc += ai * bi;
             }
-            _set(c_buf, i, j, c_col_str, c_acc);
+            c_buf[_idx(i, j, c_col_str)] = c_acc;
         }
     }
 
