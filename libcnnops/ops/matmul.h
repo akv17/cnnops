@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <omp.h>
+
 #include "../tensor.h"
 #include "../timer.h"
 
@@ -6,6 +8,30 @@
 
 
 Tensor *matmul_cpu_float32(Tensor *a, Tensor *b);
+
+
+void _kernel(
+    float32_t *a,
+    float32_t *b,
+    float32_t *c,
+    int32_t a_rows,
+    int32_t a_col_str,
+    int32_t b_cols,
+    int32_t b_col_str,
+    int32_t common_dim,
+    int32_t c_col_str
+) {
+    #pragma omp parallel for
+    for (int i = 0; i < a_rows; i++) {
+        for (int j = 0; j < b_cols; j++) {
+            float32_t c_acc = 0.0;
+            for (int k = 0; k < common_dim; k++) {
+                c_acc += a[_idx(i, k, a_col_str)] * b[_idx(k, j, b_col_str)];
+            }
+            c[_idx(i, j, c_col_str)] = c_acc;
+        }
+    }
+}
 
 
 Tensor *matmul_cpu_float32(Tensor *a, Tensor *b) {
@@ -26,7 +52,7 @@ Tensor *matmul_cpu_float32(Tensor *a, Tensor *b) {
     int32_t c_size = c_rows * c_cols;
     float32_t *c_buf = (float32_t *) malloc(sizeof(float32_t) * c_size);
 
-    _kernel0(
+    _kernel(
         a_buf,
         b_buf,
         c_buf,
@@ -51,56 +77,3 @@ Tensor *matmul_cpu_float32(Tensor *a, Tensor *b) {
     t->buffer = c_buf;
     return t;
 }
-
-
-void _kernel0(
-    float32_t *a,
-    float32_t *b,
-    float32_t *c,
-    int32_t a_rows,
-    int32_t a_col_str,
-    int32_t b_cols,
-    int32_t b_col_str,
-    int32_t common_dim,
-    int32_t c_col_str
-) {
-    for (int i = 0; i < a_rows; i++) {
-        for (int j = 0; j < b_cols; j++) {
-            float32_t c_acc = 0.0;
-            for (int k = 0; k < common_dim; k++) {
-                // float32_t ai = a[_idx(i, k, a_col_str)];
-                // float32_t bi = b[_idx(k, j, b_col_str)];
-                // c_acc += ai * bi;
-                // float32_t ai = a[_idx(i, k, a_col_str)];
-                // float32_t bi = b[_idx(k, j, b_col_str)];
-                c_acc += a[_idx(i, k, a_col_str)] * b[_idx(k, j, b_col_str)];
-            }
-            c[_idx(i, j, c_col_str)] = c_acc;
-        }
-    }
-}
-
-
-// void _kernel1(
-//     float32_t *a,
-//     float32_t *b,
-//     float32_t *c,
-//     int32_t a_rows,
-//     int32_t a_col_str,
-//     int32_t b_cols,
-//     int32_t b_col_str,
-//     int32_t common_dim,
-//     int32_t c_col_str
-// ) {
-//     for (int i = 0; i < a_rows; i++) {
-//         for (int k = 0; k < common_dim; k++) {
-//             float32_t c_acc = 0.0;
-//             for (int j = 0; j < b_cols; j++) {
-//                 float32_t ai = a[_idx(i, k, a_col_str)];
-//                 float32_t bi = b[_idx(k, j, b_col_str)];
-//                 c_acc += ai * bi;
-//             }
-//             c[_idx(i, j, c_col_str)] = c_acc;
-//         }
-//     }
-// }
