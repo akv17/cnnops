@@ -43,6 +43,7 @@ OpSpec *_compute_op_spec(Tensor *a, Tensor *b) {
     int32_t b_cols = b->shape[ndim-1];
     int32_t b_stride = b_cols;
 
+    // fold into a batch all the dims up to the last two dims (rows and cols)
     int32_t batch_dims = ndim - 2;
     int32_t batch_size = 1;
     for (size_t i = 0; i < batch_dims; i++) {
@@ -125,6 +126,10 @@ void _kernel(
 }
 
 
+// equivalent to PyTorch batch mamtmul supporting arbitrary number of dimensions.
+// essentially this is just a series of 'k' matrix multiplications.
+// all dims except last two (rows and cols) are folded into 'k' (total number of matrices to multiply). 
+// each such k-th matrix is located via offset into 1d buffer. 
 Tensor *matmul(Tensor *a, Tensor *b) {
     OpSpec *spec = _compute_op_spec(a, b);
     float32_t *a_buf = (float32_t *) a->buffer;
