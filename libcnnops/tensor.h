@@ -17,13 +17,22 @@ struct Tensor {
     void *buffer;
 };
 void print_tensor(Tensor *t, int buffer_limit);
+void compare_tensors(Tensor *a, Tensor *b);
 
 
-void _print_tensor_buffer_float32(void *buffer, int size) {
+void _print_tensor_buffer_float32(void *buffer, int buffer_size, int print_size) {
+    int half_print_size = (int) print_size / 2;
     float *fbuffer = (float *) buffer;
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < half_print_size; i++) {
         printf("%f", fbuffer[i]);
-        if (i < size - 1) {
+        if (i < half_print_size - 1) {
+            printf(", ");
+        }
+    }
+    printf(" ... ");
+    for (int i = buffer_size - half_print_size; i < buffer_size; i++) {
+        printf("%f", fbuffer[i]);
+        if (i < buffer_size - 1) {
             printf(", ");
         }
     }
@@ -48,9 +57,17 @@ void print_tensor(Tensor *t, int buffer_size_limit) {
     int buffer_size_print = buffer_size_limit == -1 ? t->num_items : buffer_size_limit;
     printf("data:\n");
     printf("[");
-    _print_tensor_buffer_float32(t->buffer, buffer_size_print);
+    _print_tensor_buffer_float32(t->buffer, t->num_items, buffer_size_print);
     printf("]");
     printf("\n");
+}
+
+
+void compare_tensors(Tensor *a, Tensor *b) {
+    if (a->num_items != b->num_items) {
+        printf("Size mismatch: %d, %d", a->num_items, b->num_items);
+        exit(1);
+    }
 }
 
 #endif
