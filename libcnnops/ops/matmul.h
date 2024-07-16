@@ -151,6 +151,7 @@ void _kernel_sgemm(
     int32_t c_cols,
     int32_t c_stride
 ) {
+    // even though we pass CblasRowMajor params, lda, ldb and ldc should be set as if we use col-major.
     cblas_sgemm(
         CblasRowMajor,
         CblasNoTrans,
