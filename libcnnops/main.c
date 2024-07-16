@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-
 #include "tensor.h"
 #include "read.h"
 #include "timer.h"
@@ -17,11 +16,8 @@ int main() {
     print_tensor(b, TENSOR_BUFFER_PRINT_LIMIT); printf("\n");
     print_tensor(c_in, TENSOR_BUFFER_PRINT_LIMIT); printf("\n");
 
-    timer_start();
     Tensor *c_out = matmul(a, b);
-    timer_end();
     
     print_tensor(c_out, TENSOR_BUFFER_PRINT_LIMIT); printf("\n");
-
-    timer_print();
+    compare_tensors(c_in, c_out, 0);
 }
