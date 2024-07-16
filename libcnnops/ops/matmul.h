@@ -115,17 +115,20 @@ void _kernel(
     float32_t *b,
     float32_t *c,
     int32_t a_rows,
+    int32_t a_cols,
     int32_t a_stride,
+    int32_t b_rows,
     int32_t b_cols,
     int32_t b_stride,
-    int32_t common_dim,
+    int32_t c_rows,
+    int32_t c_cols,
     int32_t c_stride
 ) {
     #pragma omp parallel for
     for (int i = 0; i < a_rows; i++) {
         for (int j = 0; j < b_cols; j++) {
             float32_t c_acc = 0.0;
-            for (int k = 0; k < common_dim; k++) {
+            for (int k = 0; k < a_cols; k++) {
                 c_acc += a[_idx2d(i, k, a_stride)] * b[_idx2d(k, j, b_stride)];
             }
             c[_idx2d(i, j, c_stride)] = c_acc;
@@ -139,27 +142,46 @@ void _kernel_sgemm(
     float32_t *b,
     float32_t *c,
     int32_t a_rows,
+    int32_t a_cols,
     int32_t a_stride,
+    int32_t b_rows,
     int32_t b_cols,
     int32_t b_stride,
-    int32_t common_dim,
+    int32_t c_rows,
+    int32_t c_cols,
     int32_t c_stride
 ) {
+    // cblas_sgemm(
+    //     CblasRowMajor,
+    //     CblasNoTrans,
+    //     CblasNoTrans,
+    //     (int) a_rows,
+    //     (int) b_cols,
+    //     (int) a_cols,
+    //     1.0,
+    //     (float *) a,
+    //     (int) a_rows,
+    //     (float *) b,
+    //     (int) b_rows,
+    //     1.0,
+    //     (float *) c,
+    //     (int) c_rows
+    // );
     cblas_sgemm(
         CblasRowMajor,
         CblasNoTrans,
         CblasNoTrans,
-        a_rows,
-        b_cols,
-        common_dim,
+        16,
+        16,
+        16,
         1.0,
-        a,
-        a_rows,
-        b,
-        common_dim,
+        (float *) a,
+        16,
+        (float *) b,
+        16,
         1.0,
-        c,
-        a_rows
+        (float *) c,
+        16
     );
 }
 
@@ -178,20 +200,27 @@ Tensor *matmul(Tensor *a, Tensor *b) {
     int32_t b_offset = 0;
     int32_t c_offset = 0;
     for (int32_t i = 0; i < batch_size; i++) {
-        _kernel(
-            a_buf + a_offset,
-            b_buf + b_offset,
-            c_buf + c_offset,
+        // printf("%d %d %d\n", a_offset, b_offset, c_offset);
+        _kernel_sgemm(
+            a_buf,
+            b_buf,
+            c_buf,
             spec->a_rows,
+            spec->a_cols,
             spec->a_stride,
+            spec->b_rows,
             spec->b_cols,
             spec->b_stride,
-            spec->a_cols,
+            spec->c_rows,
+            spec->c_cols,
             spec->c_stride
         );
-        a_offset += spec->a_batch_stride;
-        b_offset += spec->b_batch_stride;
-        c_offset += spec->c_batch_stride;
+        // a_offset += (spec->a_batch_stride * a->item_size);
+        // b_offset += (spec->b_batch_stride * a->item_size);
+        // c_offset += (spec->c_batch_stride * a->item_size);
+        // a_offset += spec->a_batch_stride;
+        // b_offset += spec->b_batch_stride;
+        // c_offset += spec->c_batch_stride;
     }
     Tensor *out = _create_output_tensor(spec, c_buf);
     return out;
