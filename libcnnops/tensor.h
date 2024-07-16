@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef float float32_t;
 
@@ -18,7 +19,7 @@ struct Tensor {
     void *buffer;
 };
 void print_tensor(Tensor *t, int buffer_limit);
-void compare_tensors(Tensor *a, Tensor *b);
+void compare_tensors(Tensor *a, Tensor *b, int print_diff);
 
 
 void _print_tensor_buffer_float32(void *buffer, int buffer_size, int print_size) {
@@ -64,7 +65,7 @@ void print_tensor(Tensor *t, int buffer_size_limit) {
 }
 
 
-void compare_tensors(Tensor *a, Tensor *b) {
+void compare_tensors(Tensor *a, Tensor *b, int print_diff) {
     if (a->num_items != b->num_items) {
         printf("Size mismatch: %d, %d\n", a->num_items, b->num_items);
         exit(1);
@@ -76,8 +77,10 @@ void compare_tensors(Tensor *a, Tensor *b) {
     for (int i = 0; i < size; i++) {
         float diff = (float) fabs(a_buf[i] - b_buf[i]);
         if (diff > 1e-5) {
-            printf("Compare Diff at %d: %f %f %f\n", i, a_buf[i], b_buf[i], diff);
             has_diff = 1;
+            if (print_diff) {
+                printf("Compare Diff at %d: %f %f %f\n", i, a_buf[i], b_buf[i], diff);
+            }
         }
     }
     if (!has_diff) {
