@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <omp.h>
+#include <cblas.h>
 
 #include "../tensor.h"
 #include "../timer.h"
@@ -102,7 +103,6 @@ Tensor *_create_output_tensor(OpSpec *spec, float32_t *buffer) {
 
 
 void _kernel(
-    int32_t offset,
     float32_t *a,
     float32_t *b,
     float32_t *c,
@@ -118,11 +118,41 @@ void _kernel(
         for (int j = 0; j < b_cols; j++) {
             float32_t c_acc = 0.0;
             for (int k = 0; k < common_dim; k++) {
-                c_acc += a[_idx2d(i, k, a_stride) + offset] * b[_idx2d(k, j, b_stride) + offset];
+                c_acc += a[_idx2d(i, k, a_stride)] * b[_idx2d(k, j, b_stride)];
             }
-            c[_idx2d(i, j, c_stride) + offset] = c_acc;
+            c[_idx2d(i, j, c_stride)] = c_acc;
         }
     }
+}
+
+
+void _kernel_sgemm(
+    float32_t *a,
+    float32_t *b,
+    float32_t *c,
+    int32_t a_rows,
+    int32_t a_stride,
+    int32_t b_cols,
+    int32_t b_stride,
+    int32_t common_dim,
+    int32_t c_stride
+) {
+    cblas_sgemm(
+        CblasRowMajor,
+        CblasNoTrans,
+        CblasNoTrans,
+        a_rows,
+        b_cols,
+        common_dim,
+        1.0,
+        a,
+        a_rows,
+        b,
+        common_dim,
+        1.0,
+        c,
+        a_rows
+    );
 }
 
 
@@ -136,12 +166,12 @@ Tensor *matmul(Tensor *a, Tensor *b) {
     float32_t *b_buf = (float32_t *) b->buffer;
     float32_t *c_buf = (float32_t *) malloc(sizeof(float32_t) * spec->c_size);
     int32_t batch_stride = spec->batch_stride;
-    for (int32_t offset = 0; offset < spec->batch_stride; offset += batch_stride) {
-        _kernel(
-            offset,
-            a_buf,
-            b_buf,
-            c_buf,
+    int32_t batch_size = spec->batch_size;
+    for (int32_t offset = 0, i = 0; i < batch_size; offset += batch_stride, i++) {
+        _kernel_sgemm(
+            a_buf + offset,
+            b_buf + offset,
+            c_buf + offset,
             spec->a_rows,
             spec->a_stride,
             spec->b_cols,
