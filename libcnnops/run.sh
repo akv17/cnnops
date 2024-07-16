@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc -fopenmp -O3 main.c && OMP_NUM_THREADS=16 ./a.out
+gcc main.c -O3 -lblas -lm && OMP_NUM_THREADS=16 ./a.out
