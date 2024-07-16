@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef float float32_t;
 
@@ -65,8 +66,25 @@ void print_tensor(Tensor *t, int buffer_size_limit) {
 
 void compare_tensors(Tensor *a, Tensor *b) {
     if (a->num_items != b->num_items) {
-        printf("Size mismatch: %d, %d", a->num_items, b->num_items);
+        printf("Size mismatch: %d, %d\n", a->num_items, b->num_items);
         exit(1);
+    }
+    float *a_buf = (float *) a->buffer;
+    float *b_buf = (float *) b->buffer;
+    int size = a->num_items;
+    int has_diff = 0;
+    for (int i = 0; i < size; i++) {
+        float diff = (float) fabs(a_buf[i] - b_buf[i]);
+        if (diff > 1e-5) {
+            printf("Compare Diff at %d: %f %f %f\n", i, a_buf[i], b_buf[i], diff);
+            has_diff = 1;
+        }
+    }
+    if (!has_diff) {
+        printf("Compare: OK\n");
+    }
+    else {
+        printf("Compare: FAIL\n");
     }
 }
 
