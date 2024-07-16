@@ -110,7 +110,7 @@ Tensor *_create_output_tensor(OpSpec *spec, float32_t *buffer) {
 }
 
 
-void _kernel(
+void _kernel_naive(
     float32_t *a,
     float32_t *b,
     float32_t *c,
@@ -151,37 +151,21 @@ void _kernel_sgemm(
     int32_t c_cols,
     int32_t c_stride
 ) {
-    // cblas_sgemm(
-    //     CblasRowMajor,
-    //     CblasNoTrans,
-    //     CblasNoTrans,
-    //     (int) a_rows,
-    //     (int) b_cols,
-    //     (int) a_cols,
-    //     1.0,
-    //     (float *) a,
-    //     (int) a_rows,
-    //     (float *) b,
-    //     (int) b_rows,
-    //     1.0,
-    //     (float *) c,
-    //     (int) c_rows
-    // );
     cblas_sgemm(
         CblasRowMajor,
         CblasNoTrans,
         CblasNoTrans,
-        16,
-        16,
-        16,
+        a_rows,
+        b_cols,
+        a_cols,
         1.0,
-        (float *) a,
-        16,
-        (float *) b,
-        16,
-        1.0,
-        (float *) c,
-        16
+        a,
+        a_cols,
+        b,
+        b_cols,
+        0.0,
+        c,
+        c_cols
     );
 }
 
@@ -200,11 +184,10 @@ Tensor *matmul(Tensor *a, Tensor *b) {
     int32_t b_offset = 0;
     int32_t c_offset = 0;
     for (int32_t i = 0; i < batch_size; i++) {
-        // printf("%d %d %d\n", a_offset, b_offset, c_offset);
-        _kernel_sgemm(
-            a_buf,
-            b_buf,
-            c_buf,
+        _kernel_naive(
+            a_buf + a_offset,
+            b_buf + b_offset,
+            c_buf + c_offset,
             spec->a_rows,
             spec->a_cols,
             spec->a_stride,
@@ -215,12 +198,9 @@ Tensor *matmul(Tensor *a, Tensor *b) {
             spec->c_cols,
             spec->c_stride
         );
-        // a_offset += (spec->a_batch_stride * a->item_size);
-        // b_offset += (spec->b_batch_stride * a->item_size);
-        // c_offset += (spec->c_batch_stride * a->item_size);
-        // a_offset += spec->a_batch_stride;
-        // b_offset += spec->b_batch_stride;
-        // c_offset += spec->c_batch_stride;
+        a_offset += spec->a_batch_stride;
+        b_offset += spec->b_batch_stride;
+        c_offset += spec->c_batch_stride;
     }
     Tensor *out = _create_output_tensor(spec, c_buf);
     return out;
