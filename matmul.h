@@ -2,8 +2,8 @@
 #include <omp.h>
 #include <cblas.h>
 
-#include "../tensor.h"
-#include "../timer.h"
+#include "tensor.h"
+#include "timer.h"
 
 #define _idx2d(i, j, s) (i * s + j)
 

@@ -3,7 +3,7 @@
 #include "tensor.h"
 #include "read.h"
 #include "timer.h"
-#include "ops/matmul.h"
+#include "matmul.h"
 
 #define TENSOR_BUFFER_PRINT_LIMIT 8
 
