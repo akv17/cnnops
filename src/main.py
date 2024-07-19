@@ -1,19 +1,27 @@
-import numpy as np
+import click
 
 from .binding import LibMatmul
+from .experiment import Experiment
 
 
+@click.group
 def main():
-    a = np.random.normal(size=(2, 4)).astype('float32')
-    b = np.random.normal(size=(4, 8)).astype('float32')
-    res_np = np.dot(a, b)
-    
-    lib = LibMatmul.load()
-    spec = lib.create_op_spec(a, b)
-    res_lib = lib.matmul(spec, a, b)
+    pass
 
-    print(res_np.ravel())
-    print([*res_lib])
+
+@main.command()
+@click.argument('a')
+@click.argument('b')
+def compare(a, b):
+    a_shape = _parse_shape(a)
+    b_shape = _parse_shape(b)
+    lib = LibMatmul.load()
+    exp = Experiment(lib=lib, a_shape=a_shape, b_shape=b_shape)
+    exp.compare()
+
+
+def _parse_shape(v):
+    return tuple(map(int, v.strip().split('x')))
 
 
 if __name__ == '__main__':

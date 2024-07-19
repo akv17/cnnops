@@ -1,5 +1,4 @@
 import ctypes
-import numpy as np
 
 
 class LibMatmul:
