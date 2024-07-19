@@ -1,4 +1,5 @@
 import ctypes
+import numpy as np
 
 
 class LibMatmul:
@@ -32,7 +33,7 @@ class LibMatmul:
         self._lib.create_op_spec.argtypes = (
             ctypes.c_int,
             ctypes.c_int,
-            
+            ctypes.POINTER(ctypes.c_int),
             ctypes.POINTER(ctypes.c_int),
         )
         self._lib.create_op_spec.restype = _OpSpec
