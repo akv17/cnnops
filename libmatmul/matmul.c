@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <omp.h>
+
 #define _i2d(i, j, s) (i * s + j)
 
 
@@ -83,6 +85,7 @@ void _matmul_naive(
     int cc,
     int cs
 ) {
+    #pragma omp parallel for
     for (int i = 0; i < ar; i++) {
         for (int j = 0; j < bc; j++) {
             for (int k = 0; k < ac; k++) {
