@@ -94,7 +94,7 @@ void _matmul_naive(
 
 
 void matmul(
-    int impl,
+    int kernel,
     OpSpec spec,
     float *a,
     float *b,
