@@ -1,2 +1,2 @@
 #!/bin/bash
-cd libmatmul && gcc matmul.c -fPIC -shared -o libmatmul.so
+cd libmatmul && gcc matmul.c -O3 -fPIC -fopenmp -shared -o libmatmul.so
